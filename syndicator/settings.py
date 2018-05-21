@@ -37,7 +37,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'reposter.apps.ReposterConfig'
+    'reposter.apps.ReposterConfig',
+]
+
+# Runs the publish script every hour, as per spec
+CRONJOBS = [
+    ('0 * * * *', 'reposter.admin.publish')
 ]
 
 MIDDLEWARE = [
