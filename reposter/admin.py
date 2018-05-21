@@ -5,6 +5,8 @@ from .models import event_post, event_toPost
 def publish(modeladmin, request, querySet):
     # Here's where the reposting logic goes.
     # I'll have to figure out getting API keys
+    # Then, it's as easy sending a bunch of postrequests for every cached entry
+    # cache entry should be cleared for successful posting
     pass
 publish.short_description = 'Trigger reposting events'
 
