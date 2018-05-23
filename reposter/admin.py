@@ -7,14 +7,11 @@ from syndicator.credentials import credentials
 timezone = 'America/New_York'
 
 # Register your models here.
-def publish(modeladmin, request, querySet):
-    # Here's where the reposting logic goes.
-    # I'll have to figure out getting API keys
-    # Then, it's as easy sending a bunch of postrequests for every cached entry
+def publish(modeladmin, request, querySet=event_toPost.objects.all()):
     # cache entry should be cleared for successful posting
-    for event in event_toPost.objects.all():
+    for event in querySet:
         publish_eventBrite(event)
-        
+        # publish_meetup(event)
 publish.short_description = 'Repost selected events'
 
 def publish_eventBrite(event):
@@ -54,6 +51,34 @@ def publish_eventBrite(event):
         )
         return eb_publish.json()['published']
     return False
+
+# Unfortunately, couldn't test this with a free account...
+def publish_meetup(event):
+    headers = {
+        'key': credentials['mu_key']
+    }
+    data = {
+        'description' : event.event_description,
+        'duration': event.event_end_time - event.event_start_time,
+        'group_id': credentials['mu_group'],
+        'group_urlname': credentials['mu_group_url'],
+        'guest_limit': 0,
+        'hosts': credentials['mu_id'],
+        'how_to_find_us': credentials['mu_find'],
+        'name': event.event_name,
+        'rsvp_limit': event.limit,
+        'simple_html_description': event.event_description,
+        'time': event.event_start_time,
+        'venue_id': credentials['mu_venue_id'],
+        'venue_visibility': 'public',
+        'why': credentials['mu_why']
+    }
+    response = requests.post(
+        'https://www.api.meetup.com/2/events/',
+        params = headers,
+        data = data
+    )
+    return response.status_code == 201
 
 class publishAdmin(admin.ModelAdmin):
     # list_display = ['event_name', 'reposted']

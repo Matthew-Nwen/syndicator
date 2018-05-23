@@ -12,6 +12,7 @@ class event_post(models.Model):
     event_date = models.DateField('date of event')
     event_start_time = models.TimeField('time of start of event', default=datetime.now)
     event_end_time = models.TimeField('time of end of event', default=datetime.now)
+    event_limit = models.PositiveIntegerField('limit on people', default=0)
     reposted = models.BooleanField(default=False)
 
 # Represents cached events that need to be posted.
