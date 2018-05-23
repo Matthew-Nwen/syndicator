@@ -12,8 +12,11 @@ def publish(modeladmin, request, querySet=event_toPost.objects.all()):
     for event in querySet:
         publish_eventBrite(event)
         # publish_meetup(event)
+        # publish_picatic(event.event)
+        # publish_eventful(event.event)
 publish.short_description = 'Repost selected events'
 
+# This logic works!
 def publish_eventBrite(event):
     data = {'event.name.html': event.event_name,
         "event.description.html": event.event_description,
@@ -55,9 +58,10 @@ def publish_eventBrite(event):
 # Unfortunately, couldn't test this with a free account...
 def publish_meetup(event):
     headers = {
-        'key': credentials['mu_key']
+        'authorization': 'Bearer {0}'.format(credentials['mu_key'])
     }
     data = {
+        'title': event.event_name,
         'description' : event.event_description,
         'duration': event.event_end_time - event.event_start_time,
         'group_id': credentials['mu_group'],
@@ -75,10 +79,50 @@ def publish_meetup(event):
     }
     response = requests.post(
         'https://www.api.meetup.com/2/events/',
-        params = headers,
+        headers = headers,
         data = data
     )
     return response.status_code == 201
+
+# Ran into an oauth issue--the site uses an outdated oauth 1 schema.
+def publish_eventful(event):
+    headers = {
+        'Authorization': 'Bearer {0}'.format(credentials['ef_key'])
+    }
+    data = {
+        'app_key': credentials['ef_key'],
+        'oauth_consumer_key': credentials['ef_okey'],
+        'title': event.event_name,
+        'start_time': event.event_start_time,
+        'stop_time': event.event_end_time,
+    }
+    response = requests.post(
+        'http://api.eventful.com/rest/events/new',
+        headers = headers,
+        data = data
+    )
+    print(response.content)
+
+# Picatic immediately redirects my post requests--can't quite figure out
+def publish_picatic(event):
+    headers = {
+        'Authorization': 'Bearer {0}'.format(credentials['pi_key'])
+    }
+    data = {
+        'data': {
+            'attributes': {
+                'title': event.event_name,
+            },
+            'type': 'event'
+        }
+    }
+    response = requests.get(
+        'https://api.picatic.com/v2/event/',
+        headers = headers,
+        data = data,
+    )
+    return response.status_code == 201
+
 
 class publishAdmin(admin.ModelAdmin):
     # list_display = ['event_name', 'reposted']
